@@ -2,11 +2,11 @@
 
 A simple plugin to the [BitBar](https://getbitbar.com/) as basic [Pocket](https://getpocket.com/) client working in your Mac menu bar.
 
-![](https://imgur.com/xxtHqaW)
+![](https://i.imgur.com/xxtHqaW.png)
 
 Supports main actions: retrieve articles, add or delete an article.
 
-![](https://imgur.com/JAcw7IY)
+![](https://i.imgur.com/JAcw7IY.png)
 
 ## Instructions
 
