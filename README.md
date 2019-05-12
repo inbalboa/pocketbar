@@ -1,6 +1,6 @@
 # Pocket Bar
 
-A simple plugin to the [BitBar](https://getbitbar.com/) as basic [Pocket](https://getpocket.com/) client working in your Mac menu bar.
+A simple plugin to the [BitBar](https://getbitbar.com/) as a basic [Pocket](https://getpocket.com/) client working in your Mac menu bar.
 
 ![](https://i.imgur.com/xxtHqaW.png)
 
