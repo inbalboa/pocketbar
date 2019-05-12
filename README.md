@@ -4,7 +4,7 @@ A simple plugin to the [BitBar](https://getbitbar.com/) as basic [Pocket](https:
 
 ![](https://i.imgur.com/xxtHqaW.png)
 
-Supports main actions: retrieve articles, add or delete an article.
+Supports main actions: retrieve articles, add or delete (use Option) an article.
 
 ![](https://i.imgur.com/JAcw7IY.png)
 
