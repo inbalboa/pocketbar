@@ -94,7 +94,7 @@ def main():
         print_refresh()
         sys.exit(1)
 
-    adapted_articles = [Article(i['item_id'], i['resolved_url'], i['resolved_title'])
+    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')))
                         for i in raw_answer['list'].values()]
 
     print(f'{len(adapted_articles)}|font=Verdana templateImage={pocket_icon()}')
