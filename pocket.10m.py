@@ -25,8 +25,9 @@ class Article:
     title: str
 
     def __str__(self):
-        return f'''{self.title.replace("|", "—").strip() if self.title else self.link}|href={self.link} length=60
-➖ {self.title.replace("|", "—") if self.title else self.link}|alternate=true length=60 bash={sys.argv[
+        title_ = self.title.replace("|", "—").strip()
+        return f'''{title_ if title_ else self.link}|href={self.link} length=60
+➖ {title_ if title_ else self.link}|alternate=true length=60 bash={sys.argv[
             0]} param1=--delete param2={self.id} terminal=false refresh=true'''
 
 
