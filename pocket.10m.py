@@ -23,12 +23,12 @@ class Article:
     id: str
     link: str
     title: str
+    cmd: str
 
     def __str__(self):
         title_ = self.title.replace("|", "—").strip()
         return f'''{title_ if title_ else self.link}|href={self.link} length=60
-➖ {title_ if title_ else self.link}|alternate=true length=60 bash={sys.argv[
-            0]} param1=--delete param2={self.id} terminal=false refresh=true'''
+➖ {title_ if title_ else self.link}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'''
 
 
 def parse_args():
@@ -67,7 +67,7 @@ def print_refresh():
     print('🌐 Open Pocket|href="https://getpocket.com/" refresh=no')
 
 
-def main():
+def main(argv):
     parsed_args = parse_args()
 
     try:
@@ -95,16 +95,16 @@ def main():
         print_refresh()
         sys.exit(1)
 
-    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')))
+    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')), argv[0])
                         for i in raw_answer['list'].values()]
 
     print(f'{len(adapted_articles)}|font=Verdana templateImage={pocket_icon()}')
     print('---')
     print(*adapted_articles, sep='\n')
     print('---')
-    print(f'➕ Save a URL|bash={sys.argv[0]} param1=--add terminal=false refresh=true')
+    print(f'➕ Save a URL|bash={argv[0]} param1=--add terminal=false refresh=true')
     print_refresh()
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
