@@ -5,7 +5,7 @@
 # <bitbar.author>Sergey Shlyapugin</bitbar.author>
 # <bitbar.author.github>inbalboa</bitbar.author.github>
 # <bitbar.desc>Basic Pocket client.</bitbar.desc>
-# <bitbar.image>https://i.imgur.com/xxtHqaW.png</bitbar.image>
+# <bitbar.image>https://i.imgur.com/Orgqqtr.png</bitbar.image>
 # <bitbar.dependencies>python3,pocket-api</bitbar.dependencies>
 # <bitbar.abouturl>https://github.com/inbalboa/pocketbar</bitbar.abouturl>
 
