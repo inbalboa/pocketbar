@@ -1,7 +1,7 @@
 #!/usr/bin/env -S PATH="${PATH}:/usr/local/bin" python3
 
 # <bitbar.title>Pocket Bar</bitbar.title>
-# <bitbar.version>v1.0</bitbar.version>
+# <bitbar.version>v1.5</bitbar.version>
 # <bitbar.author>Sergey Shlyapugin</bitbar.author>
 # <bitbar.author.github>inbalboa</bitbar.author.github>
 # <bitbar.desc>Basic Pocket client.</bitbar.desc>
@@ -14,8 +14,8 @@ from dataclasses import dataclass
 import subprocess
 import sys
 
-CONSUMER_KEY = 'YOUR CONSUMER KEY'
-ACCESS_TOKEN = 'YOUR ACCESS TOKEN'
+APPNAME = 'pocketbar'
+CMD = sys.argv[0]
 
 
 @dataclass(frozen=True)
@@ -31,10 +31,33 @@ class Article:
 ➖ {title_ if title_ else self.link}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'''
 
 
+def get_secrets():
+    consumer_key = keyring.get_password(APPNAME, 'consumer_key')
+    access_token = keyring.get_password(APPNAME, 'access_token')
+    return consumer_key, access_token
+
+
+def update_secrets():
+    consumer_key = get_input('\"Enter your consumer key from\\n\\"https://getpocket.com/developer/apps/\\"\"', hidden=True)
+    if not consumer_key:
+        return None, None
+    keyring.set_password(APPNAME, 'consumer_key', consumer_key)
+
+    pocket = Pocket(consumer_key=consumer_key)
+    redirect_uri = 'https://getpocket.com/connected_applications'
+    request_token = pocket.get_request_token(redirect_uri)
+    auth_url = f'https://getpocket.com/auth/authorize?request_token={request_token}&redirect_uri={redirect_uri}'
+    subprocess.Popen(['open', auth_url])
+    get_ok('\"Authorize the app in the opened browser tab, then close this dialog.\"')
+    access_token = pocket.get_access_token(request_token)
+    keyring.set_password(APPNAME, 'access_token', access_token)
+
+
 def parse_args():
     parser = ArgumentParser(description='Pocket Bar')
     parser.add_argument('-d', '--delete', type=str, help='delete item')
     parser.add_argument('-a', '--add', action='store_true', help='add item')
+    parser.add_argument('-s', '--secrets', action='store_true', help='update secrets')
     args = parser.parse_args()
     return args
 
@@ -43,68 +66,105 @@ def pocket_icon():
     return 'iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAQAAABuvaSwAAABIElEQVR4Xs3OvS9DYRQH4KdKfaViRWq2SUpCzKJithKrpISko6E6WJBg8L8ws0g6dJMIg6nNbZcmEkLEcG96qduZ31nec/LknJd/lVkVF84T6kLF7HeaU/Xoxm1C3XhUlYvxisCyQSMJNWhZYCXGa+ryeiWvYe03HjdjoDNNmzSCvHoSPlJX1A/6bHhw0BvvedO2o1/KpqbPCP/4xqqGeQwpe9W2Y0vTh3NZzGtYjfFipw35i7b3iIarFmI84V45eof83VlEKbs3EeOUSzVTUTds276xqJtScynlW+Y8O5HRnYxTz+a6x0Uth519YcZUtBS7KRklgWvrcrKypq27Figl3ENawZXAkzt3ngSuFKSTaJhRS3YdO7ZryWhv+If5AkpGXVSbf9oEAAAAAElFTkSuQmCC'
 
 
-def get_url():
+def get_ok(caption):
     osa_bin = 'osascript'
-    osa_params = "-e 'Tell application \"System Events\" to display dialog \"Save an item to Pocket:\" default answer \"\"' -e 'text returned of result'"
+    osa_params = f"-e 'Tell application \"System Events\" to display dialog {caption} buttons \"Close\" default button \"Close\"'"
+    task = subprocess.Popen(f'{osa_bin} {osa_params} > /dev/null', shell=True)
+    task.wait()
 
+
+def get_input(caption, hidden=False):
+    osa_bin = 'osascript'
+    hidden_text = ' with hidden answer' if hidden else ''
+    osa_params = f"-e 'Tell application \"System Events\" to display dialog {caption} default answer \"\" {hidden_text}' -e 'text returned of result'"
     task = subprocess.Popen(f'{osa_bin} {osa_params}', shell=True, stdout=subprocess.PIPE)
     answer_text = task.stdout.read()
-    assert task.wait() == 0
+    task.wait()
 
     return answer_text.decode().replace('\n', '').replace('\r', '').strip()
 
 
 def print_error(error):
-    print('✦ !|color=#ECB935')
+    print('!|color=#ECB935')
     print('---')
     print(f'Exception: {error}')
 
 
 def print_refresh():
     print('---')
-    print('🔄 Refresh|refresh=yes')
+    print('Refresh|refresh=yes')
     print('---')
-    print('🌐 Open Pocket|href="https://getpocket.com/" refresh=no')
+    print('Open Pocket|href="https://getpocket.com/" refresh=no')
+    print(f'Reauthorize...|alternate=true bash={CMD} param1=--secrets terminal=false refresh=true')
 
 
-def main(argv):
+def print_secrets_error():
+    print('!|color=#ECB935')
+    print('---')
+    print(f'Need authorization')
+    print('---')
+    print(f'Authorize...|bash={CMD} param1=--secrets terminal=false refresh=true')
+
+
+def print_import_error():
+    print('!|color=#ECB935')
+    print('---')
+    print(f'Need to install pocket-api or/and keyring packages')
+    print('---')
+    print(f'Install (with PIP)...|bash=pip3 param1=install param2=-U param3=pocket-api param4=keyring terminal=true refresh=true')
+    
+
+def main():
     parsed_args = parse_args()
 
     try:
+        global keyring, Pocket, PocketException
+        import keyring
         from pocket import Pocket, PocketException
     except ImportError:
-        print_error('You need to `pip3 install pocket-api`')
+        print_import_error()
         print_refresh()
-        sys.exit(1)
+        return
 
-    pocket = Pocket(consumer_key=CONSUMER_KEY, access_token=ACCESS_TOKEN)
+    consumer_key, access_token = get_secrets()
+    pocket = Pocket(consumer_key=consumer_key, access_token=access_token)
 
     if parsed_args.delete:
         pocket.delete(parsed_args.delete).commit()
-        sys.exit()
+        return
     elif parsed_args.add:
-        new_url = get_url()
+        new_url = get_input('\"Save an item to Pocket:\"')
         if new_url:
             pocket.add(url=new_url)
-        sys.exit()
+        return
+    elif parsed_args.secrets:
+        update_secrets()
+        return
 
     try:
         raw_answer = pocket.retrieve(sort='newest')
-    except (Exception, PocketException) as error:
-        print_error(error)
+    except PocketException as e:
+        if e.http_code in (400, 401):
+            print_secrets_error()
+        else:
+            print_error(e)
         print_refresh()
-        sys.exit(1)
+        return
+    except Exception as e:
+        print_error(e)
+        print_refresh()
+        return
 
-    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')), argv[0])
+    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')), CMD)
                         for i in raw_answer['list'].values()]
 
-    print(f'{len(adapted_articles)}|font=Verdana templateImage={pocket_icon()}')
+    print(f'{len(adapted_articles)}|font=Verdana size=14 templateImage={pocket_icon()}')
     print('---')
     print(*adapted_articles, sep='\n')
     print('---')
-    print(f'➕ Save a URL|bash={argv[0]} param1=--add terminal=false refresh=true')
+    print(f'➕ Save a URL|bash={CMD} param1=--add terminal=false refresh=true')
     print_refresh()
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
