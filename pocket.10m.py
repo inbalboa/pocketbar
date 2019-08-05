@@ -154,7 +154,6 @@ def main():
         print_error(e)
         print_refresh()
         return
-
     adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')), CMD)
                         for i in raw_answer['list'].values()]
 
