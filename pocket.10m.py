@@ -26,7 +26,7 @@ class Article:
     cmd: str
 
     def __str__(self):
-        title_ = self.title.replace("|", "—").strip()
+        title_ = self.title.replace('|', '—').strip()
         return f'''{title_ if title_ else self.link}|href={self.link} length=60
 ➖ {title_ if title_ else self.link}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'''
 
@@ -34,13 +34,13 @@ class Article:
 def parse_args():
     parser = ArgumentParser(description='Pocket Bar')
     parser.add_argument('-d', '--delete', type=str, help='delete item')
-    parser.add_argument('-a', '--add', action="store_true", help='add item')
+    parser.add_argument('-a', '--add', action='store_true', help='add item')
     args = parser.parse_args()
     return args
 
 
 def pocket_icon():
-    return "iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAQAAABuvaSwAAABIElEQVR4Xs3OvS9DYRQH4KdKfaViRWq2SUpCzKJithKrpISko6E6WJBg8L8ws0g6dJMIg6nNbZcmEkLEcG96qduZ31nec/LknJd/lVkVF84T6kLF7HeaU/Xoxm1C3XhUlYvxisCyQSMJNWhZYCXGa+ryeiWvYe03HjdjoDNNmzSCvHoSPlJX1A/6bHhw0BvvedO2o1/KpqbPCP/4xqqGeQwpe9W2Y0vTh3NZzGtYjfFipw35i7b3iIarFmI84V45eof83VlEKbs3EeOUSzVTUTds276xqJtScynlW+Y8O5HRnYxTz+a6x0Uth519YcZUtBS7KRklgWvrcrKypq27Figl3ENawZXAkzt3ngSuFKSTaJhRS3YdO7ZryWhv+If5AkpGXVSbf9oEAAAAAElFTkSuQmCC"
+    return 'iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAQAAABuvaSwAAABIElEQVR4Xs3OvS9DYRQH4KdKfaViRWq2SUpCzKJithKrpISko6E6WJBg8L8ws0g6dJMIg6nNbZcmEkLEcG96qduZ31nec/LknJd/lVkVF84T6kLF7HeaU/Xoxm1C3XhUlYvxisCyQSMJNWhZYCXGa+ryeiWvYe03HjdjoDNNmzSCvHoSPlJX1A/6bHhw0BvvedO2o1/KpqbPCP/4xqqGeQwpe9W2Y0vTh3NZzGtYjfFipw35i7b3iIarFmI84V45eof83VlEKbs3EeOUSzVTUTds276xqJtScynlW+Y8O5HRnYxTz+a6x0Uth519YcZUtBS7KRklgWvrcrKypq27Figl3ENawZXAkzt3ngSuFKSTaJhRS3YdO7ZryWhv+If5AkpGXVSbf9oEAAAAAElFTkSuQmCC'
 
 
 def get_url():
@@ -51,7 +51,7 @@ def get_url():
     answer_text = task.stdout.read()
     assert task.wait() == 0
 
-    return answer_text.decode('utf-8').strip().replace('\n', '').replace('\r', '')
+    return answer_text.decode().replace('\n', '').replace('\r', '').strip()
 
 
 def print_error(error):
@@ -106,5 +106,5 @@ def main(argv):
     print_refresh()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.argv)
