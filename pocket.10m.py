@@ -11,11 +11,14 @@
 
 from argparse import ArgumentParser
 from dataclasses import dataclass
+import json
+from pathlib import Path
 import subprocess
 import sys
 
 APPNAME = 'pocketbar'
 CMD = sys.argv[0]
+CACHE_PATH = '~/Library/Caches/pocketbar/articles.json'
 
 
 @dataclass(frozen=True)
@@ -26,9 +29,8 @@ class Article:
     cmd: str
 
     def __str__(self):
-        title_ = self.title.replace('|', '—').strip()
-        return f'''{title_ if title_ else self.link}|href={self.link} length=60
-➖ {title_ if title_ else self.link}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'''
+        title_ = self.title.replace('|', '—').strip() if self.title else self.link
+        return f'''{title_}|href={self.link} length=60\n➖ {title_}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'''
 
 
 def get_secrets():
@@ -48,7 +50,7 @@ def update_secrets():
     request_token = pocket.get_request_token(redirect_uri)
     auth_url = f'https://getpocket.com/auth/authorize?request_token={request_token}&redirect_uri={redirect_uri}'
     subprocess.Popen(['open', auth_url])
-    get_ok('\"Authorize the app in the opened browser tab, then close this dialog.\"')
+    get_ok('\"Press the Authorize button in the opened browser tab, then close this dialog.\"')
     access_token = pocket.get_access_token(request_token)
     keyring.set_password(APPNAME, 'access_token', access_token)
 
@@ -68,7 +70,7 @@ def pocket_icon():
 
 def get_ok(caption):
     osa_bin = 'osascript'
-    osa_params = f"-e 'Tell application \"System Events\" to display dialog {caption} buttons \"Close\" default button \"Close\"'"
+    osa_params = f"-e 'Tell application \"System Events\" to display alert \"Pocket Bar\" message {caption} buttons \"Close\" default button \"Close\"'"
     task = subprocess.Popen(f'{osa_bin} {osa_params} > /dev/null', shell=True)
     task.wait()
 
@@ -76,7 +78,7 @@ def get_ok(caption):
 def get_input(caption, hidden=False):
     osa_bin = 'osascript'
     hidden_text = ' with hidden answer' if hidden else ''
-    osa_params = f"-e 'Tell application \"System Events\" to display dialog {caption} default answer \"\" {hidden_text}' -e 'text returned of result'"
+    osa_params = f"-e 'Tell application \"System Events\" to display dialog {caption} default answer \"\" with title \"Pocket Bar\" with icon 1 {hidden_text}' -e 'text returned of result'"
     task = subprocess.Popen(f'{osa_bin} {osa_params}', shell=True, stdout=subprocess.PIPE)
     answer_text = task.stdout.read()
     task.wait()
@@ -95,7 +97,7 @@ def print_refresh():
     print('Refresh|refresh=yes')
     print('---')
     print('Open Pocket|href="https://getpocket.com/" refresh=no')
-    print(f'Reauthorize...|alternate=true bash={CMD} param1=--secrets terminal=false refresh=true')
+    print(f'Re-authorize...|alternate=true bash={CMD} param1=--secrets terminal=false refresh=true')
 
 
 def print_secrets_error():
@@ -113,6 +115,32 @@ def print_import_error():
     print('---')
     print(f'Install (with PIP)...|bash=pip3 param1=install param2=-U param3=pocket-api param4=keyring terminal=true refresh=true')
     
+
+def get_cache(cache_path):
+    try:
+        with open(Path(cache_path).expanduser()) as json_file:
+            return json.load(json_file)
+    except:
+        return {}
+
+
+def set_cache(cache_path, json_data):
+    expanded_cache_path = Path(cache_path).expanduser()
+    expanded_cache_path.parent.mkdir(exist_ok=True)
+    with open(expanded_cache_path, 'w+') as json_file:
+        json.dump(json_data, json_file)
+
+
+def update_from_cache(main_dict, update_dict):
+    if update_dict['status'] == 2:
+        return main_dict
+    res = dict(main_dict)
+    res_list = res.get('list', {})
+    res_list.update(update_dict.get('list', {}))
+    res.update(update_dict)
+    res['list'] = res_list
+    return res
+
 
 def main():
     parsed_args = parse_args()
@@ -141,8 +169,9 @@ def main():
         update_secrets()
         return
 
+    raw_articles = get_cache(CACHE_PATH)
     try:
-        raw_answer = pocket.retrieve(sort='newest')
+        raw_answer = pocket.retrieve(sort='newest', detailType='simple', since=raw_articles.get('since'))
     except PocketException as e:
         if e.http_code in (400, 401):
             print_secrets_error()
@@ -154,9 +183,11 @@ def main():
         print_error(e)
         print_refresh()
         return
-    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')), CMD)
-                        for i in raw_answer['list'].values()]
 
+    raw_articles = update_from_cache(raw_articles, raw_answer)
+    set_cache(CACHE_PATH, raw_articles)
+    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')), CMD)
+                        for i in raw_articles['list'].values() if i['status'] == '0']
     print(f'{len(adapted_articles)}|font=Verdana size=14 templateImage={pocket_icon()}')
     print('---')
     print(*adapted_articles, sep='\n')
