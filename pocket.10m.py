@@ -57,8 +57,9 @@ def update_secrets():
 
 def parse_args():
     parser = ArgumentParser(description='Pocket Bar')
-    parser.add_argument('-d', '--delete', type=str, help='delete item')
     parser.add_argument('-a', '--add', action='store_true', help='add item')
+    parser.add_argument('-d', '--delete', type=str, help='delete item')
+    parser.add_argument('-f', '--full', action='store_true', help='full retrieve')
     parser.add_argument('-s', '--secrets', action='store_true', help='update secrets')
     args = parser.parse_args()
     return args
@@ -95,6 +96,7 @@ def print_error(error):
 def print_refresh():
     print('---')
     print('Refresh|refresh=yes')
+    print(f'Full refresh|alternate=true bash={CMD} param1=--full terminal=false refresh=yes')
     print('---')
     print('Open Pocket|href="https://getpocket.com/" refresh=no')
     print(f'Re-authorize...|alternate=true bash={CMD} param1=--secrets terminal=false refresh=true')
@@ -157,19 +159,19 @@ def main():
     consumer_key, access_token = get_secrets()
     pocket = Pocket(consumer_key=consumer_key, access_token=access_token)
 
-    if parsed_args.delete:
-        pocket.delete(parsed_args.delete).commit()
-        return
-    elif parsed_args.add:
+    if parsed_args.add:
         new_url = get_input('\"Save an item to Pocket:\"')
         if new_url:
             pocket.add(url=new_url)
+        return
+    elif parsed_args.delete:
+        pocket.delete(parsed_args.delete).commit()
         return
     elif parsed_args.secrets:
         update_secrets()
         return
 
-    raw_articles = get_cache(CACHE_PATH)
+    raw_articles = {} if parsed_args.full else get_cache(CACHE_PATH)
     try:
         raw_answer = pocket.retrieve(sort='newest', detailType='simple', since=raw_articles.get('since'))
     except PocketException as e:
