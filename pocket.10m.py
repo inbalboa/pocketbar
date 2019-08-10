@@ -18,7 +18,7 @@ import sys
 
 APPNAME = 'pocketbar'
 CMD = sys.argv[0]
-CACHE_PATH = '~/Library/Caches/pocketbar/articles.json'
+CACHE_PATH = f'~/Library/Caches/{APPNAME}/articles.json'
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,7 @@ class Article:
     link: str
     title: str
     cmd: str
-
+    
     def __str__(self):
         title_ = self.title.replace('|', '—').strip() if self.title else self.link
         return f'''{title_}|href={self.link} length=60\n➖ {title_}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'''
@@ -44,7 +44,7 @@ def update_secrets():
     if not consumer_key:
         return None, None
     keyring.set_password(APPNAME, 'consumer_key', consumer_key)
-
+    
     pocket = Pocket(consumer_key=consumer_key)
     redirect_uri = 'https://getpocket.com/connected_applications'
     request_token = pocket.get_request_token(redirect_uri)
@@ -83,7 +83,7 @@ def get_input(caption, hidden=False):
     task = subprocess.Popen(f'{osa_bin} {osa_params}', shell=True, stdout=subprocess.PIPE)
     answer_text = task.stdout.read()
     task.wait()
-
+    
     return answer_text.decode().replace('\n', '').replace('\r', '').strip()
 
 
@@ -116,7 +116,7 @@ def print_import_error():
     print(f'Need to install pocket-api or/and keyring packages')
     print('---')
     print(f'Install (with PIP)...|bash=pip3 param1=install param2=-U param3=pocket-api param4=keyring terminal=true refresh=true')
-    
+
 
 def get_cache(cache_path):
     try:
@@ -146,7 +146,7 @@ def update_from_cache(main_dict, update_dict):
 
 def main():
     parsed_args = parse_args()
-
+    
     try:
         global keyring, Pocket, PocketException
         import keyring
@@ -155,10 +155,10 @@ def main():
         print_import_error()
         print_refresh()
         return
-
+    
     consumer_key, access_token = get_secrets()
     pocket = Pocket(consumer_key=consumer_key, access_token=access_token)
-
+    
     if parsed_args.add:
         new_url = get_input('\"Save an item to Pocket:\"')
         if new_url:
@@ -170,7 +170,7 @@ def main():
     elif parsed_args.secrets:
         update_secrets()
         return
-
+    
     raw_articles = {} if parsed_args.full else get_cache(CACHE_PATH)
     try:
         raw_answer = pocket.retrieve(sort='newest', detailType='simple', since=raw_articles.get('since'))
@@ -185,10 +185,16 @@ def main():
         print_error(e)
         print_refresh()
         return
-
+    
     raw_articles = update_from_cache(raw_articles, raw_answer)
     set_cache(CACHE_PATH, raw_articles)
-    adapted_articles = [Article(i.get('item_id'), i.get('resolved_url', i.get('given_url')), i.get('resolved_title', i.get('given_title')), CMD)
+    
+    adapted_articles = [Article(
+                            id=i.get('item_id'),
+                            link=i.get('resolved_url', i.get('given_url')),
+                            title=i.get('resolved_title', i.get('given_title')),
+                            cmd=CMD
+                        )
                         for i in raw_articles['list'].values() if i['status'] == '0']
     print(f'{len(adapted_articles)}|font=Verdana size=14 templateImage={pocket_icon()}')
     print('---')
