@@ -6,7 +6,7 @@
 # <bitbar.author.github>inbalboa</bitbar.author.github>
 # <bitbar.desc>Basic Pocket client.</bitbar.desc>
 # <bitbar.image>https://i.imgur.com/XQnh7US.png</bitbar.image>
-# <bitbar.dependencies>python3,pocket-api</bitbar.dependencies>
+# <bitbar.dependencies>python3,pocket-api,keyring</bitbar.dependencies>
 # <bitbar.abouturl>https://github.com/inbalboa/pocketbar</bitbar.abouturl>
 
 from argparse import ArgumentParser
