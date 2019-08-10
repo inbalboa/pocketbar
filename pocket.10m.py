@@ -1,7 +1,7 @@
 #!/usr/bin/env -S PATH="${PATH}:/usr/local/bin" python3
 
 # <bitbar.title>Pocket Bar</bitbar.title>
-# <bitbar.version>v1.5</bitbar.version>
+# <bitbar.version>v1.6</bitbar.version>
 # <bitbar.author>Sergey Shlyapugin</bitbar.author>
 # <bitbar.author.github>inbalboa</bitbar.author.github>
 # <bitbar.desc>Basic Pocket client.</bitbar.desc>
