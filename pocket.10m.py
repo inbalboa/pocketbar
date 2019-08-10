@@ -173,7 +173,7 @@ def main():
 
     raw_articles = {} if parsed_args.full else get_cache(CACHE_PATH)
     try:
-        raw_answer = pocket.retrieve(sort='newest', detailType='simple', since=raw_articles.get('since'))
+        raw_answer = pocket.retrieve(detailType='simple', since=raw_articles.get('since'))
     except PocketException as e:
         if e.http_code in (400, 401):
             print_secrets_error()
@@ -195,7 +195,7 @@ def main():
                             title=i.get('resolved_title', i.get('given_title')),
                             cmd=CMD
                         )
-                        for i in raw_articles['list'].values() if i['status'] == '0']
+                        for i in sorted(raw_articles['list'].values(), key=lambda x: x['time_added'], reverse=True) if i['status'] == '0']
     print(f'{len(adapted_articles)}|font=Verdana size=14 templateImage={pocket_icon()}')
     print('---')
     print(*adapted_articles, sep='\n')
