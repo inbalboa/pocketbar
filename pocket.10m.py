@@ -12,6 +12,7 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass
 import json
+import operator
 from pathlib import Path
 import subprocess
 import sys
@@ -195,7 +196,11 @@ def main():
                             title=i.get('resolved_title', i.get('given_title')),
                             cmd=CMD
                         )
-                        for i in sorted(raw_articles['list'].values(), key=lambda x: x.get('time_added', ''), reverse=True) if i['status'] == '0']
+                        for i in sorted(
+                            filter(lambda x: x['status'] == '0', raw_articles['list'].values()),
+                            key=operator.itemgetter('time_added'),
+                            reverse=True
+                        )]
     print(f'{len(adapted_articles)}|font=Verdana size=14 templateImage={pocket_icon()}')
     print('---')
     print(*adapted_articles, sep='\n')
