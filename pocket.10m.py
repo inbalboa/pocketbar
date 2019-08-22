@@ -30,8 +30,8 @@ class Article:
     cmd: str
 
     def __str__(self):
-        title_ = self.title.replace('|', '—').strip() if self.title else self.link
-        return f'''{title_}|href={self.link} length=60\n➖ {title_}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'''
+        title_ = self.title.replace('|', '—').strip() or self.link
+        return f'{title_}|href={self.link} length=60\n➖ {title_}|alternate=true length=60 bash={self.cmd} param1=--delete param2={self.id} terminal=false refresh=true'
 
 
 def get_secrets():
