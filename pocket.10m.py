@@ -116,7 +116,7 @@ def print_import_error():
     print('---')
     print(f'Need to install pocket-api or/and keyring packages')
     print('---')
-    print(f'Install (with PIP)...|bash=pip3 param1=install param2=-U param3=pocket-api param4=keyring terminal=true refresh=true')
+    print(f'Install (with PIP)...|bash=pip3 param1=install param2=-U param3=--user param4=pocket-api param5=keyring terminal=true refresh=true')
 
 
 def get_cache(cache_path):
