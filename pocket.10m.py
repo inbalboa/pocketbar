@@ -1,4 +1,4 @@
-#!/usr/bin/env -S PATH="${PATH}:/usr/local/bin" python3
+#!/usr/bin/env -S PATH="/usr/local/bin:${PATH}" python3
 
 # <bitbar.title>Pocket Bar</bitbar.title>
 # <bitbar.version>v1.6.1</bitbar.version>
@@ -9,13 +9,13 @@
 # <bitbar.dependencies>python3,pocket-api,keyring</bitbar.dependencies>
 # <bitbar.abouturl>https://github.com/inbalboa/pocketbar</bitbar.abouturl>
 
-from argparse import ArgumentParser
-from dataclasses import dataclass
 import json
 import operator
-from pathlib import Path
 import subprocess
 import sys
+from argparse import ArgumentParser
+from dataclasses import dataclass
+from pathlib import Path
 
 APPNAME = 'pocketbar'
 CMD = sys.argv[0]
@@ -71,19 +71,27 @@ def pocket_icon():
 
 
 def get_ok(caption):
-    osa_bin = 'osascript'
-    osa_params = f"-e 'Tell application \"System Events\" to display alert \"Pocket Bar\" message {caption} buttons \"Close\" default button \"Close\"'"
-    task = subprocess.Popen(f'{osa_bin} {osa_params} > /dev/null', shell=True)
+    osa_args = (
+        'osascript',
+        '-e',
+        f'Tell application \"System Events\" to display alert \"Pocket Bar\" message {caption} buttons \"Close\" default button \"Close\"'
+    )
+    task = subprocess.Popen(osa_args, stdout = None)
     task.wait()
 
 
 def get_input(caption, hidden=False):
-    osa_bin = 'osascript'
-    hidden_text = ' with hidden answer' if hidden else ''
-    osa_params = f"-e 'Tell application \"System Events\" to display dialog {caption} default answer \"\" with title \"Pocket Bar\" with icon 1 {hidden_text}' -e 'text returned of result'"
-    task = subprocess.Popen(f'{osa_bin} {osa_params}', shell=True, stdout=subprocess.PIPE)
-    answer_text = task.stdout.read()
+    hidden_text = 'with hidden answer' if hidden else ''
+    osa_args = (
+        'osascript',
+        '-e',
+        f'Tell application \"System Events\" to display dialog {caption} default answer \"\" with title \"Pocket Bar\" with icon 1 {hidden_text}',
+        '-e',
+        'text returned of result'
+    )
+    task = subprocess.Popen(osa_args, stdout=subprocess.PIPE)
     task.wait()
+    answer_text, _ = task.communicate()
 
     return answer_text.decode().replace('\n', '').replace('\r', '').strip()
 
@@ -201,7 +209,7 @@ def main():
                             key=operator.itemgetter('time_added'),
                             reverse=True
                         )]
-    print(f'{len(adapted_articles)}|font=Verdana size=14 templateImage={pocket_icon()}')
+    print(f'{len(adapted_articles)}|font=Calibri size=17 templateImage={pocket_icon()}')
     print('---')
     print(*adapted_articles, sep='\n')
     print('---')
