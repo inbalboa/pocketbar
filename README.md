@@ -12,7 +12,7 @@ Supports main actions: retrieve articles, add or delete (use ⌥) an article.
 
 1. Install the latest version of [xbar](https://github.com/matryer/xbar/releases/latest). I recommend to use [Homebrew](https://brew.sh/): run `brew install --cask xbar` in the terminal window.
 2. Install [Python 3](https://python.org), [pocket-api](https://github.com/rakanalh/pocket-api) and [keyring](https://github.com/jaraco/keyring) packages: `brew install python && pip3 install -U pocket-api keyring`.
-3. Copy [pocket.10m.py](pocket.10m.py) to your BitBar plugins folder (e.g. with curl), and run `chmod +x pocket.10m.py` in that folder.
+3. Copy [pocket.10m.py](pocket.10m.py) to your xbar plugins folder (e.g. with curl), and run `chmod +x pocket.10m.py` in that folder.
 4. [Create your consumer key](https://getpocket.com/developer/apps/new) from Pocket's developer console and authorize the app. Copy your consumer key and paste in the Pocket Bar dialog, then press Authorize button in the opened browser tab.
 
 ![](https://i.imgur.com/tMuIBuo.png)
